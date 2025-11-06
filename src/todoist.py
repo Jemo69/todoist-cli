@@ -57,7 +57,7 @@ def get_task_by_id(api_token: str, base_url: str, task_id: str) -> TodoistModel:
         raise e
 
 
-def post_task(api_token: str, base_url: str, task: Task) -> TodoistModel:
+def add_task(api_token: str, base_url: str, task: Task) -> TodoistModel:
     """
     Creates a new task in Todoist using the REST API directly (without SDK).
     """

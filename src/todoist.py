@@ -21,7 +21,7 @@ def get_tasks(api_token: str, base_url: str) -> List[TodoistModel]:
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
         tasks_data = response.json()
-        
+
         tasks = [TodoistModel(**task) for task in tasks_data["results"]]
         return tasks
     except requests.exceptions.RequestException as e:
@@ -57,7 +57,7 @@ def get_task_by_id(api_token: str, base_url: str, task_id: str) -> TodoistModel:
         raise e
 
 
-def post_task(api_token: str, base_url: str, task: Task) -> TodoistModel:
+def add_task(api_token: str, base_url: str, task: Task) -> TodoistModel | str:
     """
     Creates a new task in Todoist using the REST API directly (without SDK).
     """
@@ -76,14 +76,16 @@ def post_task(api_token: str, base_url: str, task: Task) -> TodoistModel:
         task_data = response.json()
         return TodoistModel(**task_data)
     except requests.exceptions.RequestException as e:
-        raise e
+        return str(e)
     except json.JSONDecodeError as e:
-        raise Exception(f"Error decoding JSON response: {e}")
+        return str(e)
     except Exception as e:
-        raise e
+        return str(e)
 
 
-def update_task(api_token: str, base_url: str, task_id: str, task: TaskUpdate) -> TodoistModel:
+def update_task(
+    api_token: str, base_url: str, task_id: str, task: TaskUpdate
+) -> TodoistModel:
     """
     Updates a task in Todoist using the REST API directly (without SDK).
     """
@@ -110,3 +112,4 @@ def update_task(api_token: str, base_url: str, task_id: str, task: TaskUpdate) -
         raise Exception(f"Error decoding JSON response: {e}")
     except Exception as e:
         raise e
+

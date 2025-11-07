@@ -3,7 +3,7 @@ import typer
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
-from src.todoist import get_tasks, post_task, update_task
+from src.todoist import get_tasks, add_task, update_task
 from src.models import Task, TaskUpdate
 
 load_dotenv()
@@ -21,6 +21,8 @@ def list():
     List all tasks.
     """
     try:
+        if API_TOKEN is None:
+            return
         tasks = get_tasks(API_TOKEN, BASE_URL)
         table = Table(title="Todoist Tasks")
         table.add_column("ID", style="cyan")
@@ -41,16 +43,27 @@ def list():
 def add(
     content: str = typer.Argument(..., help="The content of the task."),
     description: str = typer.Option("", help="The description of the task."),
-    project_id: int = typer.Option(None, help="The ID of the project to add the task to."),
+    project_id: int = typer.Option(
+        None, help="The ID of the project to add the task to."
+    ),
     priority: int = typer.Option(4, help="The priority of the task (1-4)."),
 ):
     """
     Add a new task.
     """
     try:
-        task = Task(content=content, description=description, project_id=project_id, priority=priority)
-        new_task = post_task(API_TOKEN, BASE_URL, task)
-        console.print(f"[bold green]Task '{new_task.content}' added successfully![/bold green]")
+        task = Task(
+            content=content,
+            description=description,
+            project_id=project_id,
+            priority=priority,
+        )
+        if API_TOKEN is None:
+            return
+        new_task = add_task(API_TOKEN, BASE_URL, task)
+        console.print(
+            f"[bold green]Task '{new_task.content}' added successfully![/bold green]"
+        )
     except Exception as e:
         console.print(f"[bold red]Error: {e}[/bold red]")
 
@@ -79,11 +92,14 @@ def update(
             return
 
         task = TaskUpdate(**task_data)
+        if API_TOKEN is None:
+            return
         updated_task = update_task(API_TOKEN, BASE_URL, task_id, task)
-        console.print(f"[bold green]Task '{updated_task.content}' updated successfully![/bold green]")
+        console.print(
+            f"[bold green]Task '{updated_task.content}' updated successfully![/bold green]"
+        )
     except Exception as e:
         console.print(f"[bold red]Error: {e}[/bold red]")
-
 
 
 @app.command()
@@ -92,9 +108,11 @@ def tui():
     Launch the Textual TUI.
     """
     from tui import TodoistApp
+
     app = TodoistApp()
     app.run()
 
 
 if __name__ == "__main__":
     app()
+

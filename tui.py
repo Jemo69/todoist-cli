@@ -2,7 +2,8 @@ from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Header, Footer, Button, Input, Label
 from textual.containers import Vertical
 from textual.screen import Screen
-from src.todoist import get_tasks, add_task
+from textual import on 
+from src.todoist import get_tasks, add_task  
 from src.models import TodoistModel, Task
 import os
 from dotenv import load_dotenv
@@ -25,14 +26,14 @@ class ViewTasksScreen(Screen):
     def update_tasks(self) -> None:
         table = self.query_one(DataTable)
         table.clear()
-        table.add_columns("ID", "Content", "Priority", "Due Date")
+        table.add_columns("ID", "Content","Description", "Priority", "Due Date")
         try:
             if API_TOKEN is None:
                 return
             tasks = get_tasks(API_TOKEN, BASE_URL)
             for task in tasks:
                 due_date = task.due.string if task.due else "No due date"
-                table.add_row(task.id, task.content, str(task.priority), due_date)
+                table.add_row(task.id, task.content,task.description, str(task.priority), due_date)
         except Exception as e:
             self.app.log(f"Error getting tasks: {e}")
 
@@ -47,7 +48,7 @@ class AddTaskScreen(Screen):
                 "Due Date (e.g., 'today', 'tomorrow', '2025-12-31'):",
                 id="due_date_label",
             ),
-            Input(placeholder="Due date", id="due_date_input"),
+            Input(placeholder="description", id="description_input"),
             Label("Priority (1-4, 4 is highest):", id="priority_label"),
             Input(placeholder="Priority", id="priority_input"),
             Button("Add Task", id="add_task_button", variant="primary"),
@@ -55,10 +56,11 @@ class AddTaskScreen(Screen):
         )
         yield Footer()
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
+    @on(Button.Pressed )
+    async def add_task(self, event: Button.Pressed) -> None:
         if event.button.id == "add_task_button":
             content = self.query_one("#content_input", Input).value
-            due_date = self.query_one("#due_date_input", Input).value
+            due_date = self.query_one("#description_input", Input).value
             priority = self.query_one("#priority_input", Input).value
 
             if not content:
@@ -69,10 +71,12 @@ class AddTaskScreen(Screen):
             try:
                 priority_int = int(priority) if priority else 1
                 new_task_obj = Task(
-                    content=content, due_string=due_date, priority=priority_int
+                    content=content, description=due_date, priority=priority_int
                 )
                 assert API_TOKEN is not None
+
                 new_task = add_task(API_TOKEN, BASE_URL, new_task_obj)
+                assert not isinstance(new_task, str)
                 self.app.log(f"Task added: {new_task.content}")
                 self.app.switch_screen("view_tasks")
                 self.app.query_one(ViewTasksScreen).update_tasks()

@@ -112,4 +112,3 @@ def update_task(
         raise Exception(f"Error decoding JSON response: {e}")
     except Exception as e:
         raise e
-

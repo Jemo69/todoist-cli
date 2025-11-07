@@ -11,9 +11,10 @@ class TaskDue(BaseModel):
 
 
 class Task(BaseModel):
+    id : str | None = None 
     content: str
     description: str
-    project_id: Optional[int]
+    project_id:  str | None = None
     priority: int
 
 

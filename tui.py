@@ -1,9 +1,12 @@
 from textual.app import App, ComposeResult
+from typing import List
 from textual.widgets import DataTable, Header, Footer, Button, Input, Label
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual import on 
-from src.todoist import get_tasks, add_task  
+from textual import on
+from src.models import TodoistModel
+from src.todoist import get_tasks, add_task
+from src.exception import TodoistException
 from src.models import TodoistModel, Task
 import os
 from dotenv import load_dotenv
@@ -15,30 +18,50 @@ BASE_URL = "https://api.todoist.com/api/v1/"
 
 
 class ViewTasksScreen(Screen):
+    BINDINGS = [
+        ("r" , "refresh_tasks", "Refresh Tasks"),
+    ]
+    def action_refresh_tasks(self) -> None:
+        self.update_tasks()
+
+
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Label("", id="status_label")
         yield DataTable()
         yield Footer()
 
     def on_mount(self) -> None:
         self.update_tasks()
 
+
     def update_tasks(self) -> None:
         table = self.query_one(DataTable)
+        status_label = self.query_one("#status_label", Label)
         table.clear()
-        table.add_columns("ID", "Content","Description", "Priority", "Due Date")
+        
         try:
-            if API_TOKEN is None:
-                return
+            assert API_TOKEN is not None
+            status_label.update("Loading tasks...")
             tasks = get_tasks(API_TOKEN, BASE_URL)
+            assert isinstance(tasks, List)
             for task in tasks:
                 due_date = task.due.string if task.due else "No due date"
                 table.add_row(task.id, task.content,task.description, str(task.priority), due_date)
+            status_label.update("")
+        except TodoistException as e:
+            status_label.update(f"Error loading tasks {e} {e.__class__.__name__}")
         except Exception as e:
-            self.app.log(f"Error getting tasks: {e}")
+            status_label.update("Error loading tasks")
+            self.app.log(f"Error getting tasks: {e} {e.__class__.__name__}")
+
 
 
 class AddTaskScreen(Screen):
+    BINDINGS = [
+        ("c", "cancel", "Cancel"),
+        ("enter", "add_task", "Add Task"),
+    ]
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
@@ -53,13 +76,15 @@ class AddTaskScreen(Screen):
             Input(placeholder="Priority", id="priority_input"),
             Button("Add Task", id="add_task_button", variant="primary"),
             Button("Cancel", id="cancel_button"),
+            Label("" , id="status_label"),
         )
         yield Footer()
 
-    @on(Button.Pressed )
+    @on(Button.Pressed)
     async def add_task(self, event: Button.Pressed) -> None:
         if event.button.id == "add_task_button":
             content = self.query_one("#content_input", Input).value
+            status_label = self.query_one("#status_label", Label)
             due_date = self.query_one("#description_input", Input).value
             priority = self.query_one("#priority_input", Input).value
 
@@ -69,18 +94,26 @@ class AddTaskScreen(Screen):
                 return
 
             try:
+                status_label.update("Adding task...")
                 priority_int = int(priority) if priority else 1
                 new_task_obj = Task(
                     content=content, description=due_date, priority=priority_int
                 )
                 assert API_TOKEN is not None
 
-                new_task = add_task(API_TOKEN, BASE_URL, new_task_obj)
+                new_task =   add_task(API_TOKEN, BASE_URL, new_task_obj)
+
+
                 assert not isinstance(new_task, str)
                 self.app.log(f"Task added: {new_task.content}")
                 self.app.switch_screen("view_tasks")
-                self.app.query_one(ViewTasksScreen).update_tasks()
+            except TodoistException as e:
+                status_label.update(f"Error adding task ")
+
+
+
             except Exception as e:
+                status_label.update("Error adding task")
                 self.app.log(f"Error adding task: {e}")
         elif event.button.id == "cancel_button":
             self.app.switch_screen("view_tasks")

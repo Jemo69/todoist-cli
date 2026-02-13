@@ -1,10 +1,11 @@
 import json
 from .models import Task, TodoistModel, TaskUpdate
+from .exception import TodoistException
 import requests
-from typing import List
+from typing import List, NoReturn, Any
 
 
-def get_tasks(api_token: str, base_url: str) -> List[TodoistModel]:
+def get_tasks(api_token: str, base_url: str) -> List[TodoistModel] | NoReturn:
     """
     Fetches active tasks from Todoist using the REST API directly (without SDK).
     """
@@ -19,17 +20,18 @@ def get_tasks(api_token: str, base_url: str) -> List[TodoistModel]:
 
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-        tasks_data = response.json()
-        
-        tasks = [TodoistModel(**task) for task in tasks_data["results"]]
+        response.raise_for_status()
+        data = response.json()
+        tasks_data = data.get("results", data)
+
+        tasks = [TodoistModel(**task) for task in tasks_data]
         return tasks
     except requests.exceptions.RequestException as e:
-        raise e
+        raise TodoistException("query failed")
     except json.JSONDecodeError as e:
-        raise Exception(f"Error decoding JSON response: {e}")
+        raise TodoistException("json decode error")
     except Exception as e:
-        raise e
+        raise TodoistException(f"Error: {e} {e.__class__.__name__}")
 
 
 def get_task_by_id(api_token: str, base_url: str, task_id: str) -> TodoistModel:
@@ -57,7 +59,7 @@ def get_task_by_id(api_token: str, base_url: str, task_id: str) -> TodoistModel:
         raise e
 
 
-def post_task(api_token: str, base_url: str, task: Task) -> TodoistModel:
+def add_task(api_token: str, base_url: str, task: Task) -> Any | NoReturn:
     """
     Creates a new task in Todoist using the REST API directly (without SDK).
     """
@@ -76,14 +78,16 @@ def post_task(api_token: str, base_url: str, task: Task) -> TodoistModel:
         task_data = response.json()
         return TodoistModel(**task_data)
     except requests.exceptions.RequestException as e:
-        raise e
+        raise TodoistException("mutation failed")
     except json.JSONDecodeError as e:
-        raise Exception(f"Error decoding JSON response: {e}")
+        raise TodoistException(" json decode error")
     except Exception as e:
-        raise e
+        raise TodoistException(f"Error: {e} {e.__class__.__name__}")
 
 
-def update_task(api_token: str, base_url: str, task_id: str, task: TaskUpdate) -> TodoistModel:
+def update_task(
+    api_token: str, base_url: str, task_id: str, task: TaskUpdate
+) -> TodoistModel:
     """
     Updates a task in Todoist using the REST API directly (without SDK).
     """

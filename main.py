@@ -1,18 +1,37 @@
 import os
+import questionary
+import json
 import typer
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
-from src.todoist import get_tasks, post_task, update_task
+from src.todoist import get_tasks, add_task, update_task
 from src.models import Task, TaskUpdate
 
 load_dotenv()
 
-API_TOKEN = os.getenv("API_TOKEN")
 BASE_URL = "https://api.todoist.com/api/v1/"
 
 app = typer.Typer()
 console = Console()
+
+
+def get_api_token() -> str | None:
+    load_dotenv()
+    return os.getenv("API_TOKEN")
+
+
+@app.command()
+def setup():
+    """
+    Setup the project.
+    """
+    api_token = questionary.text("Enter your Todoist API token: ").ask()
+    with open(".env", "w") as f:
+        f.write(f"API_TOKEN={api_token}")
+    console.print(
+        "[bold green]Setup complete! You can now use other commands.[/bold green]"
+    )
 
 
 @app.command()
@@ -21,7 +40,13 @@ def list():
     List all tasks.
     """
     try:
-        tasks = get_tasks(API_TOKEN, BASE_URL)
+        api_token = get_api_token()
+        if api_token is None:
+            console.print(
+                "[bold red]API_TOKEN not found. Run 'python main.py setup' first.[/bold red]"
+            )
+            return
+        tasks = get_tasks(api_token, BASE_URL)
         table = Table(title="Todoist Tasks")
         table.add_column("ID", style="cyan")
         table.add_column("Content", style="magenta")
@@ -41,16 +66,31 @@ def list():
 def add(
     content: str = typer.Argument(..., help="The content of the task."),
     description: str = typer.Option("", help="The description of the task."),
-    project_id: int = typer.Option(None, help="The ID of the project to add the task to."),
+    project_id: int = typer.Option(
+        None, help="The ID of the project to add the task to."
+    ),
     priority: int = typer.Option(4, help="The priority of the task (1-4)."),
 ):
     """
     Add a new task.
     """
+    api_token = get_api_token()
     try:
-        task = Task(content=content, description=description, project_id=project_id, priority=priority)
-        new_task = post_task(API_TOKEN, BASE_URL, task)
-        console.print(f"[bold green]Task '{new_task.content}' added successfully![/bold green]")
+        task = Task(
+            content=content,
+            description=description,
+            project_id=project_id,
+            priority=priority,
+        )
+        if api_token is None:
+            console.print(
+                "[bold red]API_TOKEN not found. Run 'python main.py setup' first.[/bold red]"
+            )
+            return
+        new_task = add_task(api_token, BASE_URL, task)
+        console.print(
+            f"[bold green]Task '{new_task.content}' added successfully![/bold green]"
+        )
     except Exception as e:
         console.print(f"[bold red]Error: {e}[/bold red]")
 
@@ -65,6 +105,7 @@ def update(
     """
     Update a task.
     """
+    api_token = get_api_token()
     try:
         task_data = {}
         if content:
@@ -79,11 +120,17 @@ def update(
             return
 
         task = TaskUpdate(**task_data)
-        updated_task = update_task(API_TOKEN, BASE_URL, task_id, task)
-        console.print(f"[bold green]Task '{updated_task.content}' updated successfully![/bold green]")
+        if api_token is None:
+            console.print(
+                "[bold red]API_TOKEN not found. Run 'python main.py setup' first.[/bold red]"
+            )
+            return
+        updated_task = update_task(api_token, BASE_URL, task_id, task)
+        console.print(
+            f"[bold green]Task '{updated_task.content}' updated successfully![/bold green]"
+        )
     except Exception as e:
         console.print(f"[bold red]Error: {e}[/bold red]")
-
 
 
 @app.command()
@@ -92,6 +139,7 @@ def tui():
     Launch the Textual TUI.
     """
     from tui import TodoistApp
+
     app = TodoistApp()
     app.run()
 

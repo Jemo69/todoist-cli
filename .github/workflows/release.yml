@@ -2,7 +2,7 @@ name :  make release on github
 on : 
  push : 
    branches : 
-     - main
+     - master 
       
 jobs:
   release:

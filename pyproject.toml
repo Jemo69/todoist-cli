@@ -1,5 +1,5 @@
 [project]
-name = "todoist-cli-tool"
+name = "todoist-cli"
 version = "0.1.0"
 description = "Todoist CLI - Manage your tasks from the command line"
 readme = "README.md"
@@ -16,3 +16,6 @@ dependencies = [
 
 [project.scripts]
 todoist = "main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

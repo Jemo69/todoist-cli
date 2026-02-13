@@ -2,7 +2,7 @@ import json
 from .models import Task, TodoistModel, TaskUpdate
 from .exception import TodoistException
 import requests
-from typing import ( List, NoReturn , Any )
+from typing import List, NoReturn, Any
 
 
 def get_tasks(api_token: str, base_url: str) -> List[TodoistModel] | NoReturn:
@@ -20,8 +20,9 @@ def get_tasks(api_token: str, base_url: str) -> List[TodoistModel] | NoReturn:
 
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-        tasks_data = response.json()
+        response.raise_for_status()
+        data = response.json()
+        tasks_data = data.get("results", data)
 
         tasks = [TodoistModel(**task) for task in tasks_data]
         return tasks
@@ -31,8 +32,6 @@ def get_tasks(api_token: str, base_url: str) -> List[TodoistModel] | NoReturn:
         raise TodoistException("json decode error")
     except Exception as e:
         raise TodoistException(f"Error: {e} {e.__class__.__name__}")
-
-
 
 
 def get_task_by_id(api_token: str, base_url: str, task_id: str) -> TodoistModel:
@@ -46,7 +45,6 @@ def get_task_by_id(api_token: str, base_url: str, task_id: str) -> TodoistModel:
         "Authorization": f"Bearer {api_token}",
         "Content-Type": "application/json",
     }
-
 
     try:
         response = requests.get(url, headers=headers)

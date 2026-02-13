@@ -11,19 +11,21 @@ from src.models import TodoistModel, Task
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
-API_TOKEN = os.getenv("API_TOKEN")
 BASE_URL = "https://api.todoist.com/api/v1/"
+
+
+def get_api_token() -> str | None:
+    load_dotenv()
+    return os.getenv("API_TOKEN")
 
 
 class ViewTasksScreen(Screen):
     BINDINGS = [
-        ("r" , "refresh_tasks", "Refresh Tasks"),
+        ("r", "refresh_tasks", "Refresh Tasks"),
     ]
+
     def action_refresh_tasks(self) -> None:
         self.update_tasks()
-
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -32,22 +34,33 @@ class ViewTasksScreen(Screen):
         yield Footer()
 
     def on_mount(self) -> None:
+        table = self.query_one(DataTable)
+        table.add_columns("ID", "Content", "Description", "Priority", "Due Date")
         self.update_tasks()
-
 
     def update_tasks(self) -> None:
         table = self.query_one(DataTable)
         status_label = self.query_one("#status_label", Label)
         table.clear()
-        
+
         try:
-            assert API_TOKEN is not None
+            api_token = get_api_token()
+            if api_token is None:
+                status_label.update(
+                    "Error: API_TOKEN not found. Run 'todoist setup' first."
+                )
+                return
             status_label.update("Loading tasks...")
-            tasks = get_tasks(API_TOKEN, BASE_URL)
-            assert isinstance(tasks, List)
+            tasks = get_tasks(api_token, BASE_URL)
             for task in tasks:
                 due_date = task.due.string if task.due else "No due date"
-                table.add_row(task.id, task.content,task.description, str(task.priority), due_date)
+                table.add_row(
+                    task.id,
+                    task.content,
+                    task.description,
+                    str(task.priority),
+                    due_date,
+                )
             status_label.update("")
         except TodoistException as e:
             status_label.update(f"Error loading tasks {e} {e.__class__.__name__}")
@@ -56,12 +69,12 @@ class ViewTasksScreen(Screen):
             self.app.log(f"Error getting tasks: {e} {e.__class__.__name__}")
 
 
-
 class AddTaskScreen(Screen):
     BINDINGS = [
         ("c", "cancel", "Cancel"),
         ("enter", "add_task", "Add Task"),
     ]
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
@@ -76,7 +89,7 @@ class AddTaskScreen(Screen):
             Input(placeholder="Priority", id="priority_input"),
             Button("Add Task", id="add_task_button", variant="primary"),
             Button("Cancel", id="cancel_button"),
-            Label("" , id="status_label"),
+            Label("", id="status_label"),
         )
         yield Footer()
 
@@ -99,18 +112,20 @@ class AddTaskScreen(Screen):
                 new_task_obj = Task(
                     content=content, description=due_date, priority=priority_int
                 )
-                assert API_TOKEN is not None
+                api_token = get_api_token()
+                if api_token is None:
+                    status_label.update(
+                        "Error: API_TOKEN not found. Run 'todoist setup' first."
+                    )
+                    return
 
-                new_task =   add_task(API_TOKEN, BASE_URL, new_task_obj)
-
+                new_task = add_task(api_token, BASE_URL, new_task_obj)
 
                 assert not isinstance(new_task, str)
                 self.app.log(f"Task added: {new_task.content}")
                 self.app.switch_screen("view_tasks")
             except TodoistException as e:
                 status_label.update(f"Error adding task ")
-
-
 
             except Exception as e:
                 status_label.update("Error adding task")

@@ -24,6 +24,16 @@ uv run python main.py list --tag work --due-close 3 --sort-by-date
 uv run python main.py tui --tag work --due-close 3 --sort-by-date
 ```
 
+## Release
+
+To publish a release, update the version in `pyproject.toml`, commit the change, then run:
+
+```bash
+./scripts/publish.sh
+```
+
+The script builds the package, pushes the current branch, creates a `v<version>` tag, and pushes the tag. The GitHub Actions release workflow then creates the GitHub Release and publishes the package to PyPI.
+
 ## Theme
 
 The CLI and TUI use the Money Gazer palette. The Textual color scheme lives in `money_gazer.tcss`; shared Rich terminal colors live in `src/theme.py`.

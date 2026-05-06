@@ -1,5 +1,5 @@
 [project]
-name = "todoist-cli"
+name = "todoist-cli-tool"
 version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"

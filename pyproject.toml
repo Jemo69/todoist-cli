@@ -1,0 +1,17 @@
+[project]
+name = "todoist-cli"
+version = "0.2.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.12.3",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.4",
+    "rich>=14.0.0",
+    "textual>=3.3.0",
+    "typer>=0.20.0",
+]
+
+[tool.ty.src]
+root = "./app"

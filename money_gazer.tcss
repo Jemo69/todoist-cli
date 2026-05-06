@@ -1,0 +1,180 @@
+/* Money Gazer theme
+   Palette source: user supplied light/dark CSS variables.
+   The TUI applies light colors by default and switches to the dark set when `d`
+   toggles Textual dark mode.
+*/
+
+Screen {
+    background: #ebebfa;
+    color: #08062d;
+}
+
+Screen:dark {
+    background: #050514;
+    color: #eae9fc;
+}
+
+Header {
+    background: #d6d6f5;
+    color: #08062d;
+    text-style: bold;
+}
+
+Header:dark {
+    background: #0a0a29;
+    color: #eae9fc;
+}
+
+Footer {
+    background: #d6d6f5;
+    color: #181287;
+}
+
+Footer:dark {
+    background: #0a0a29;
+    color: #a9a5f3;
+}
+
+FooterKey {
+    background: #d6d6f5;
+    color: #181287;
+}
+
+FooterKey:dark {
+    background: #0a0a29;
+    color: #a9a5f3;
+}
+
+.footer-key--key {
+    background: #fc9d03;
+    color: #191000;
+    text-style: bold;
+}
+
+.footer-key--description {
+    background: #d6d6f5;
+    color: #181287;
+}
+
+Screen:dark .footer-key--description {
+    background: #0a0a29;
+    color: #d4d2f9;
+}
+
+DataTable {
+    background: #d6d6f5;
+    color: #08062d;
+    border: solid #adadeb;
+}
+
+DataTable:dark {
+    background: #0a0a29;
+    color: #eae9fc;
+    border: solid #2929a3;
+}
+
+DataTable > .datatable--header {
+    background: #574db3;
+    color: #fff5e6;
+    text-style: bold;
+}
+
+DataTable:dark > .datatable--header {
+    background: #453d8f;
+    color: #fff5e6;
+}
+
+DataTable > .datatable--even-row {
+    background: #eeedf7;
+}
+
+DataTable:dark > .datatable--even-row {
+    background: #110f24;
+}
+
+DataTable > .datatable--cursor {
+    background: #fc9d03;
+    color: #191000;
+    text-style: bold;
+}
+
+DataTable:focus > .datatable--cursor {
+    background: #cf4b30;
+    color: #faedea;
+    text-style: bold;
+}
+
+DataTable:dark > .datatable--cursor {
+    background: #fc9d03;
+    color: #191000;
+    text-style: bold;
+}
+
+DataTable:dark:focus > .datatable--cursor {
+    background: #d86f5a;
+    color: #150705;
+    text-style: bold;
+}
+
+#add-task-dialog {
+    width: 64;
+    height: auto;
+    padding: 1 2;
+    background: #d6d6f5;
+    color: #08062d;
+    border: round #574db3;
+}
+
+Screen:dark #add-task-dialog {
+    background: #0a0a29;
+    color: #eae9fc;
+    border: round #7870c2;
+}
+
+#add-task-title {
+    color: #975e02;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+Screen:dark #add-task-title {
+    color: #fc9d03;
+}
+
+#add-task-dialog Label {
+    margin-top: 1;
+    color: #181287;
+}
+
+Screen:dark #add-task-dialog Label {
+    color: #a9a5f3;
+}
+
+#add-task-dialog Input {
+    background: #eeedf7;
+    color: #08062d;
+    border: tall #adadeb;
+}
+
+#add-task-dialog Input:focus {
+    border: tall #fc9d03;
+}
+
+Screen:dark #add-task-dialog Input {
+    background: #110f24;
+    color: #eae9fc;
+    border: tall #2929a3;
+}
+
+Screen:dark #add-task-dialog Input:focus {
+    border: tall #fc9d03;
+}
+
+#add-task-actions {
+    height: auto;
+    margin-top: 1;
+}
+
+#add-task-actions Button {
+    margin-right: 1;
+}
